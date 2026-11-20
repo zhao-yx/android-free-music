@@ -35,7 +35,7 @@
 ## 目录结构
 
 ```
-AndroidPlayer/
+项目根目录/
 ├─ app/
 │  ├─ src/main/
 │  │  ├─ java/com/local/musicplayer/
@@ -70,25 +70,25 @@ AndroidPlayer/
 
 ### 环境
 
-本项目使用本机 Unity 自带的 Android 工具链（SDK + JDK），无需额外安装：
+构建环境需要：
 
-- JDK：`D:/Program Files/UnityHub/Edit/6000.5.3f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK`
-- SDK：同一目录下的 `Sdk`
+- JDK 17（AGP 8.13 的要求）
+- Android SDK：compileSdk 36、Build-Tools 36.0.0、minSdk 24、targetSdk 35
 
 ### 本地配置
 
 `local.properties`（不纳入版本管理，需要本机自行创建）：
 
 ```properties
-sdk.dir=D\:/Program Files/UnityHub/Edit/6000.5.3f1/Editor/Data/PlaybackEngines/AndroidPlayer/Sdk
+sdk.dir=<你的 Android SDK 路径>
 ```
 
-`gradle.properties` 中通过 `org.gradle.java.home` 指向上面的 JDK。换机器时修改该行，或删除后改用环境变量 `JAVA_HOME`。
+`gradle.properties` 中通过 `org.gradle.java.home` 指向 JDK 17 的安装路径（按本机实际路径填写）。换机器时修改该行，或删除后改用环境变量 `JAVA_HOME`。
 
 ### 命令行构建
 
 ```powershell
-$env:JAVA_HOME="D:\Program Files\UnityHub\Edit\6000.5.3f1\Editor\Data\PlaybackEngines\AndroidPlayer\OpenJDK"
+$env:JAVA_HOME="<你的 JDK 17 路径>"
 $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 .\gradlew.bat assembleDebug        # 调试包：app/build/outputs/apk/debug/
 .\gradlew.bat assembleRelease      # 正式包：app/build/outputs/apk/release/
@@ -137,7 +137,7 @@ $env:PATH="$env:JAVA_HOME\bin;$env:PATH"
 - 音频格式支持范围取决于 Media3/ExoPlayer，无损与常见有损格式可用，APE/WMA/DSD 等被主动过滤。
 - 无网络权限，不包含在线音乐、歌词、云同步等功能。
 - release 未签名，且 R8 结果尚未在真机回归；正式发布前建议在目标机型上完整走一遍播放、通知、分组与换肤流程。
-- 构建环境依赖 Unity 自带 JDK/SDK 的本机路径，换机器需要改 `local.properties` 与 `gradle.properties`。
+- 构建环境依赖本机 JDK 17 与 Android SDK 的路径，换机器需要改 `local.properties` 与 `gradle.properties`。
 
 ## 授权与免责
 

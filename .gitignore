@@ -25,6 +25,14 @@ render.experimental.xml
 # Keystore files
 *.jks
 *.keystore
+*.p12
+*.pfx
+*.bks
+# 无扩展名的签名密钥库（如根目录的 alanplayer）与签名配置
+/alanplayer
+/keystore
+/keystore.*
+/signing.properties
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

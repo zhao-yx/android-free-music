@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知栏小图标：24dp 纯白单色音符，透明底，系统会按状态栏配色染色 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 音符头部 -->
+    <group
+        android:pivotX="8.2"
+        android:pivotY="18.4"
+        android:rotation="-18">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M4,18.4 a4.2,3.4 0 1,0 8.4,0 a4.2,3.4 0 1,0 -8.4,0" />
+    </group>
+
+    <!-- 符干 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10.6,2.8 h2.2 v15.6 h-2.2 z" />
+
+    <!-- 符尾 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12.8,2.8 C18.2,4.6 20.6,9.6 19.4,14.2 C18.4,10.2 16.2,7.6 12.8,6.6 Z" />
+</vector>

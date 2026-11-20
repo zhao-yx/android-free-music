@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 音乐库为空：打开的唱片封套 + 露出唱片 + 漂浮音符 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- 封套背面 -->
+    <path
+        android:pathData="M126,196 h260 a22,22 0 0,1 22,22 v146 a22,22 0 0,1 -22,22 h-260 a22,22 0 0,1 -22,-22 v-146 a22,22 0 0,1 22,-22 z"
+        android:strokeColor="#8B76E8"
+        android:strokeWidth="14" />
+
+    <!-- 唱片 -->
+    <path
+        android:pathData="M190,250 a66,66 0 1,0 132,0 a66,66 0 1,0 -132,0"
+        android:strokeColor="#B9A8FF"
+        android:strokeWidth="13" />
+    <path
+        android:pathData="M246,250 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0"
+        android:fillColor="#8B76E8" />
+
+    <!-- 漂浮音符 -->
+    <path
+        android:pathData="M318,144 a14,11 0 1,0 28,0 a14,11 0 1,0 -28,0"
+        android:fillColor="#4FBFAE" />
+    <path
+        android:fillColor="#4FBFAE"
+        android:pathData="M342,104 h9 v40 h-9 z" />
+    <path
+        android:pathData="M374,190 a11,9 0 1,0 22,0 a11,9 0 1,0 -22,0"
+        android:fillColor="#4FBFAE" />
+    <path
+        android:fillColor="#4FBFAE"
+        android:pathData="M392,158 h7 v32 h-7 z" />
+
+    <!-- 点缀 -->
+    <path
+        android:pathData="M162,132 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#8B76E8" />
+    <path
+        android:pathData="M402,120 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#4FBFAE" />
+
+    <!-- 底部投影线 -->
+    <path
+        android:pathData="M158,414 h196"
+        android:strokeColor="#9AA0B4"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.55" />
+</vector>

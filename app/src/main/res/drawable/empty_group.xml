@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 分组为空 / 分组内无歌曲：空歌单卡片 + 加号 + 音符 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- 歌单卡片 -->
+    <path
+        android:pathData="M118,166 h276 a24,24 0 0,1 24,24 v140 a24,24 0 0,1 -24,24 h-276 a24,24 0 0,1 -24,-24 v-140 a24,24 0 0,1 24,-24 z"
+        android:fillColor="#1A8B76E8"
+        android:strokeColor="#8B76E8"
+        android:strokeWidth="14" />
+
+    <!-- 列表占位线 -->
+    <path
+        android:pathData="M158,232 h120"
+        android:strokeColor="#9AA0B4"
+        android:strokeWidth="14"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M158,272 h160"
+        android:strokeColor="#9AA0B4"
+        android:strokeWidth="14"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M158,312 h96"
+        android:strokeColor="#9AA0B4"
+        android:strokeWidth="14"
+        android:strokeLineCap="round" />
+
+    <!-- 加号 -->
+    <path
+        android:pathData="M336,330 a36,36 0 1,0 72,0 a36,36 0 1,0 -72,0"
+        android:fillColor="#264FBFAE"
+        android:strokeColor="#4FBFAE"
+        android:strokeWidth="12" />
+    <path
+        android:pathData="M372,314 v32"
+        android:strokeColor="#4FBFAE"
+        android:strokeWidth="13"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M356,330 h32"
+        android:strokeColor="#4FBFAE"
+        android:strokeWidth="13"
+        android:strokeLineCap="round" />
+
+    <!-- 音符 -->
+    <path
+        android:pathData="M138,140 a12,9 0 1,0 24,0 a12,9 0 1,0 -24,0"
+        android:fillColor="#B9A8FF" />
+    <path
+        android:fillColor="#B9A8FF"
+        android:pathData="M158,108 h8 v32 h-8 z" />
+</vector>

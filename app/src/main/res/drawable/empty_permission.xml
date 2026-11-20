@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 未授予读取权限：音乐文件夹 + 锁 + 音符 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- 文件夹 -->
+    <path
+        android:pathData="M120,222 h88 l26,30 h158 a20,20 0 0,1 20,20 v112 a20,20 0 0,1 -20,20 h-272 a20,20 0 0,1 -20,-20 v-142 a20,20 0 0,1 20,-20 z"
+        android:strokeColor="#8B76E8"
+        android:strokeWidth="14"
+        android:strokeLineJoin="round" />
+
+    <!-- 音符 -->
+    <path
+        android:pathData="M332,204 a12,9 0 1,0 24,0 a12,9 0 1,0 -24,0"
+        android:fillColor="#4FBFAE" />
+    <path
+        android:fillColor="#4FBFAE"
+        android:pathData="M352,172 h8 v32 h-8 z" />
+
+    <!-- 锁 -->
+    <path
+        android:pathData="M242,316 v-16 a18,18 0 0,1 36,0 v16"
+        android:strokeColor="#4FBFAE"
+        android:strokeWidth="13"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M224,312 h72 a12,12 0 0,1 12,12 v34 a12,12 0 0,1 -12,12 h-72 a12,12 0 0,1 -12,-12 v-34 a12,12 0 0,1 12,-12 z"
+        android:strokeColor="#4FBFAE"
+        android:strokeWidth="13"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M255,334 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#4FBFAE" />
+
+    <!-- 点缀 -->
+    <path
+        android:pathData="M160,150 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#8B76E8" />
+    <path
+        android:pathData="M396,196 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#8B76E8" />
+</vector>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 无封面占位：512 视口，深色垂直渐变 + 40% 品牌紫音符，图形约占 58% -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- 不透明底色：#1A1922 -> #2C2A3A 垂直渐变 -->
+    <path android:pathData="M0,0 h512 v512 h-512 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="0"
+                android:endY="512"
+                android:startColor="#FF1A1922"
+                android:endColor="#FF2C2A3A" />
+        </aapt:attr>
+    </path>
+
+    <!-- 音符：品牌紫 #B9A8FF，约 40% 不透明度 -->
+    <group
+        android:pivotX="215"
+        android:pivotY="360"
+        android:rotation="-18">
+        <path
+            android:fillColor="#66B9A8FF"
+            android:pathData="M157,360 a58,44 0 1,0 116,0 a58,44 0 1,0 -116,0" />
+    </group>
+    <path
+        android:fillColor="#66B9A8FF"
+        android:pathData="M262,105 h24 v255 h-24 z" />
+    <path
+        android:fillColor="#66B9A8FF"
+        android:pathData="M286,105 C350,130 372,190 356,247 C344,195 322,160 286,141 Z" />
+</vector>

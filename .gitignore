@@ -2,6 +2,11 @@
 .gradle/
 build/
 
+# Release 构建产物（含 baselineProfiles / output-metadata.json）
+app/release/
+*.dm
+app/release/output-metadata.json
+
 # Local configuration file (sdk path, etc)
 local.properties
 

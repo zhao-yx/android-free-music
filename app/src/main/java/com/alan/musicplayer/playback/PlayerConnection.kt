@@ -51,11 +51,42 @@ class PlayerConnection(
     /** 已计过数的歌曲，用于避免暂停恢复时重复计数；切歌/循环时清空。 */
     private var lastCountedSongId: Long? = null
 
+    /** 音量渐变开关（来自 DataStore），切换时立即生效。 */
+    private val fadeEnabled = MutableStateFlow(true)
+
+    /** 当前正在执行的音量渐变，任意新渐变都会取消并接管它，避免叠加。 */
+    private var fadeJob: Job? = null
+
+    init {
+        scope.launch {
+            prefs.fadeEnabled.collect { enabled ->
+                fadeEnabled.value = enabled
+                if (!enabled) {
+                    // 关闭渐变时立刻退出渐变状态，恢复到正常音量
+                    fadeJob?.cancel()
+                    controller?.volume = 1f
+                }
+            }
+        }
+    }
+
     private val listener = object : Player.Listener {
         // 所有播放器事件统一在这里同步成 UI 状态，避免多处状态分叉
         override fun onEvents(player: Player, events: Player.Events) {
             val previous = _state.value
             syncState(player)
+            // 音量渐变：开始播放 / 从暂停恢复时淡入；外部原因暂停时退出渐变，避免音量卡在半途
+            if (fadeEnabled.value) {
+                if (player.isPlaying && !previous.isPlaying) {
+                    player.volume = 0f
+                    startFade(1f)
+                } else if (!player.isPlaying && previous.isPlaying) {
+                    fadeJob?.cancel()
+                    player.volume = 0f
+                }
+            } else if (!player.isPlaying && previous.isPlaying) {
+                player.volume = 1f
+            }
             // 歌曲真正开始播放即计一次；同一首暂停再继续不重复计
             val playingId = player.currentMediaItem?.mediaId?.toLongOrNull()
             if (player.isPlaying && playingId != null && playingId != lastCountedSongId) {
@@ -74,6 +105,11 @@ class PlayerConnection(
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             // 换歌或单曲循环重播都视为新的一次播放
             lastCountedSongId = null
+            // 自动切歌时无法提前淡出，至少让新曲目从 0 淡入
+            if (fadeEnabled.value && controller?.isPlaying == true) {
+                controller?.volume = 0f
+                startFade(1f)
+            }
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -114,43 +150,55 @@ class PlayerConnection(
         if (songs.isEmpty()) return
         val items = songs.map(MediaItemMapper::toMediaItem)
         val index = startIndex.coerceIn(0, items.lastIndex)
-        // 大列表整体通过 Binder 传递，异常时给出提示而不是崩溃
-        runCatching {
-            mediaController.setMediaItems(items, index, 0L)
-            mediaController.prepare()
-            mediaController.play()
-        }.onFailure {
-            _state.update { state -> state.copy(errorMessage = "队列设置失败，歌曲过多或服务异常") }
-            return
+        var failed = false
+        val startPlayback = {
+            // 渐变开启时先归零，真正的淡入由 isPlaying 变化统一触发
+            mediaController.volume = if (fadeEnabled.value) 0f else 1f
+            // 大列表整体通过 Binder 传递，异常时给出提示而不是崩溃
+            runCatching {
+                mediaController.setMediaItems(items, index, 0L)
+                mediaController.prepare()
+                mediaController.play()
+            }.onFailure {
+                failed = true
+                _state.update { state -> state.copy(errorMessage = "队列设置失败，歌曲过多或服务异常") }
+            }
         }
-        _state.update { it.copy(errorMessage = null) }
+        if (fadeEnabled.value && mediaController.isPlaying) {
+            // 正在播放时切到新队列：先淡出当前歌曲再切换
+            fadeJob?.cancel()
+            val from = mediaController.volume
+            fadeJob = scope.launch {
+                animateVolume(from, 0f)
+                startPlayback()
+            }
+        } else {
+            startPlayback()
+        }
+        if (!failed) _state.update { it.copy(errorMessage = null) }
         scope.launch { prefs.saveQueue(queueGroupId, index, songs) }
     }
 
     fun togglePlayPause() {
         val mediaController = controller ?: return
         when {
-            mediaController.isPlaying -> mediaController.pause()
+            mediaController.isPlaying -> pauseWithFade(mediaController)
             mediaController.playbackState == Player.STATE_ENDED -> {
                 // 顺序播放到最后一首后，再次点击播放从队列开头继续
                 mediaController.seekToDefaultPosition()
-                mediaController.prepare()
-                mediaController.play()
+                prepareAndPlay(mediaController)
             }
-            else -> {
-                if (mediaController.playbackState == Player.STATE_IDLE) mediaController.prepare()
-                mediaController.play()
-            }
+            else -> prepareAndPlay(mediaController)
         }
     }
 
     /** 上一曲：随机模式下由 ExoPlayer 的 shuffle 历史回到实际播放过的上一首。 */
     fun skipToPrevious() {
-        controller?.seekToPrevious()
+        skipWithFade { controller?.seekToPrevious() }
     }
 
     fun skipToNext() {
-        controller?.seekToNext()
+        skipWithFade { controller?.seekToNext() }
     }
 
     fun seekTo(positionMs: Long) {
@@ -169,6 +217,66 @@ class PlayerConnection(
 
     fun clearError() {
         _state.update { it.copy(errorMessage = null) }
+    }
+
+    // ---------------- 音量渐变 ----------------
+
+    private fun prepareAndPlay(mediaController: MediaController) {
+        // 先归零再播放，淡入由 isPlaying 变化统一触发，避免起播瞬间爆音
+        mediaController.volume = if (fadeEnabled.value) 0f else 1f
+        if (mediaController.playbackState == Player.STATE_IDLE) mediaController.prepare()
+        mediaController.play()
+    }
+
+    private fun pauseWithFade(mediaController: MediaController) {
+        if (!fadeEnabled.value) {
+            mediaController.pause()
+            return
+        }
+        fadeJob?.cancel()
+        val from = mediaController.volume
+        fadeJob = scope.launch {
+            animateVolume(from, 0f)
+            mediaController.pause()
+        }
+    }
+
+    private fun skipWithFade(action: () -> Unit) {
+        val mediaController = controller
+        if (mediaController == null || !fadeEnabled.value || !mediaController.isPlaying) {
+            action()
+            return
+        }
+        fadeJob?.cancel()
+        val from = mediaController.volume
+        fadeJob = scope.launch {
+            animateVolume(from, 0f)
+            action()
+            // 切歌后的淡入交给 onMediaItemTransition / isPlaying 事件
+        }
+    }
+
+    /** 从当前音量平滑过渡到目标音量；总是覆盖上一个渐变，不会叠加。 */
+    private fun startFade(target: Float) {
+        val mediaController = controller ?: return
+        if (!fadeEnabled.value) {
+            mediaController.volume = 1f
+            return
+        }
+        fadeJob?.cancel()
+        val from = mediaController.volume
+        fadeJob = scope.launch { animateVolume(from, target) }
+    }
+
+    private suspend fun animateVolume(from: Float, to: Float) {
+        val mediaController = controller ?: return
+        val steps = (FADE_DURATION_MS / FADE_STEP_MS).coerceAtLeast(1)
+        for (step in 1..steps) {
+            val fraction = step.toFloat() / steps
+            mediaController.volume = from + (to - from) * fraction
+            delay(FADE_STEP_MS)
+        }
+        mediaController.volume = to
     }
 
     private fun applyMode(mediaController: MediaController, mode: PlayMode) {
@@ -269,5 +377,11 @@ class PlayerConnection(
 
     private companion object {
         const val PERSIST_INTERVAL_MS = 5_000L
+
+        /** 单次淡入/淡出时长。 */
+        const val FADE_DURATION_MS = 300L
+
+        /** 渐变刷新步长，约 60fps。 */
+        const val FADE_STEP_MS = 16L
     }
 }

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +46,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -101,6 +103,7 @@ fun LibraryScreen(
     // 左滑操作中“加入分组”的目标歌曲
     var actionSong by remember { mutableStateOf<Song?>(null) }
     var showSkinPicker by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     // 当前展开删除块的行；同一时间只允许一行展开
     var expandedSongId by remember { mutableLongStateOf(-1L) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -160,6 +163,9 @@ fun LibraryScreen(
                 title = { Text(stringResource(R.string.app_name)) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "设置")
+                    }
                     IconButton(onClick = { showSkinPicker = true }) {
                         Icon(Icons.Filled.Palette, contentDescription = "切换皮肤")
                     }
@@ -254,6 +260,46 @@ fun LibraryScreen(
             onDismiss = { actionSong = null },
         )
     }
+
+    if (showSettings) {
+        val fadeEnabled by viewModel.fadeEnabled.collectAsStateWithLifecycle()
+        SettingsDialog(
+            fadeEnabled = fadeEnabled,
+            onFadeEnabledChange = viewModel::setFadeEnabled,
+            onDismiss = { showSettings = false },
+        )
+    }
+}
+
+@Composable
+private fun SettingsDialog(
+    fadeEnabled: Boolean,
+    onFadeEnabledChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("设置") },
+        text = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("音量渐变", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = "播放、暂停与切歌时平滑过渡音量",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = fadeEnabled, onCheckedChange = onFadeEnabledChange)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("完成") }
+        },
+    )
 }
 
 @Composable

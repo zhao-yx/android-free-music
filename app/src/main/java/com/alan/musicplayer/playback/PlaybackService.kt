@@ -16,7 +16,15 @@ import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.alan.musicplayer.MainActivity
+import com.alan.musicplayer.MusicApplication
 import com.alan.musicplayer.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * 播放前台服务：ExoPlayer + MediaSession。
@@ -29,6 +37,7 @@ class PlaybackService : MediaSessionService() {
     private var player: ExoPlayer? = null
     private var session: MediaSession? = null
     private var noisyReceiver: BroadcastReceiver? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
@@ -73,6 +82,7 @@ class PlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
     override fun onDestroy() {
+        serviceScope.coroutineContext.cancelChildren()
         noisyReceiver?.let { runCatching { unregisterReceiver(it) } }
         noisyReceiver = null
         session?.release()
@@ -82,12 +92,26 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 
-    /** 耳机拔出 / 蓝牙断开时立即暂停播放。 */
+    /** 耳机拔出 / 蓝牙断开时先淡出再暂停，避免瞬间停止产生爆音。 */
     private fun registerNoisyReceiver() {
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-                    player?.pause()
+                    val exoPlayer = player ?: return
+                    val prefs = (application as MusicApplication).container.prefsRepository
+                    serviceScope.launch {
+                        val fadeEnabled = runCatching { prefs.fadeEnabled.first() }.getOrDefault(true)
+                        if (fadeEnabled && exoPlayer.isPlaying) {
+                            val steps = 18
+                            for (step in 1..steps) {
+                                exoPlayer.volume = 1f - step / steps.toFloat()
+                                delay(16)
+                            }
+                        }
+                        exoPlayer.pause()
+                        // 与 App 内策略一致：渐变开启时保持静音，下次播放再淡入
+                        exoPlayer.volume = if (fadeEnabled) 0f else 1f
+                    }
                 }
             }
         }

@@ -53,6 +53,14 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     val groups: StateFlow<List<Group>> = container.groupRepository.groups
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** 音量渐变开关，默认开启，改动即时写入 DataStore。 */
+    val fadeEnabled: StateFlow<Boolean> = container.prefsRepository.fadeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    fun setFadeEnabled(enabled: Boolean) {
+        viewModelScope.launch { container.prefsRepository.setFadeEnabled(enabled) }
+    }
+
     /** 手动刷新后的结果提示，避免“点了扫描没反应”的错觉。 */
     private val _scanNotice = MutableStateFlow<String?>(null)
     val scanNotice: StateFlow<String?> = _scanNotice.asStateFlow()

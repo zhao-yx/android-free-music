@@ -3,6 +3,7 @@ package com.alan.musicplayer.data.repo
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -32,6 +33,7 @@ class PrefsRepository(private val context: Context) {
         val LAST_QUEUE_INDEX = intPreferencesKey("last_queue_index")
         val LAST_QUEUE_JSON = stringPreferencesKey("last_queue_json")
         val SKIN = intPreferencesKey("skin")
+        val FADE_ENABLED = booleanPreferencesKey("fade_enabled")
     }
 
     data class Snapshot(
@@ -52,6 +54,15 @@ class PrefsRepository(private val context: Context) {
 
     suspend fun setSkin(skin: Skin) {
         context.playerDataStore.edit { it[Keys.SKIN] = skin.storageValue }
+    }
+
+    /** 音量渐变开关，默认开启。 */
+    val fadeEnabled: Flow<Boolean> = context.playerDataStore.data.map {
+        it[Keys.FADE_ENABLED] ?: true
+    }
+
+    suspend fun setFadeEnabled(enabled: Boolean) {
+        context.playerDataStore.edit { it[Keys.FADE_ENABLED] = enabled }
     }
 
     suspend fun setRepeatMode(mode: Int) {

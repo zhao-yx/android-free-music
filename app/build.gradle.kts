@@ -51,6 +51,19 @@ kotlin {
     }
 }
 
+// 统一产物文件名：从构建配置的 versionName 生成，debug / release 各自输出目录不变
+val appVersionName: String = android.defaultConfig.versionName ?: "1.0"
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            // 新版 variant API 未公开 outputFileName，需通过 AGP 的 VariantOutputImpl 设置
+            (output as com.android.build.api.variant.impl.VariantOutputImpl)
+                .outputFileName
+                .set("HappyHear-$appVersionName.apk")
+        }
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

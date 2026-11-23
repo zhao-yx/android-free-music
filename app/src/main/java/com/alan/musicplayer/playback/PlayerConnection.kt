@@ -176,6 +176,8 @@ class PlayerConnection(
             startPlayback()
         }
         if (!failed) _state.update { it.copy(errorMessage = null) }
+        // 切换来源后主页列表立即跟随，无需等下次进入页面
+        _state.update { it.copy(queueGroupId = queueGroupId) }
         scope.launch { prefs.saveQueue(queueGroupId, index, songs) }
     }
 
@@ -309,6 +311,8 @@ class PlayerConnection(
                         snapshot.lastPositionMs.coerceAtLeast(0L),
                     )
                     mediaController.prepare()
+                    // 恢复队列来源，主页据此显示对应分组列表
+                    _state.update { it.copy(queueGroupId = snapshot.queueGroupId) }
                 }
             } catch (_: Exception) {
                 // 恢复失败不影响本次使用

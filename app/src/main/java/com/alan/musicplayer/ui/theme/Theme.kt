@@ -1,11 +1,13 @@
 package com.alan.musicplayer.ui.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import com.alan.musicplayer.R
 import com.alan.musicplayer.data.model.Skin
@@ -156,9 +158,16 @@ private val CheerfulColors = lightColorScheme(
 
 @Composable
 fun LocalMusicTheme(skin: Skin, content: @Composable () -> Unit) {
+    val colorScheme = skin.style.colorScheme
     MaterialTheme(
-        colorScheme = skin.style.colorScheme,
+        colorScheme = colorScheme,
         typography = Typography(),
-        content = content,
-    )
+    ) {
+        // 页面背景是全屏皮肤图，Scaffold 为透明色无法自动推导内容色，
+        // 这里统一给出语义内容色，避免默认黑色文字/图标在深色皮肤下不可见。
+        CompositionLocalProvider(
+            LocalContentColor provides colorScheme.onBackground,
+            content = content,
+        )
+    }
 }

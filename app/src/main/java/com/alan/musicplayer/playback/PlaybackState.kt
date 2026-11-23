@@ -17,4 +17,6 @@ data class PlaybackUiState(
     val durationMs: Long = 0L,
     val playMode: PlayMode = PlayMode.SEQUENCE,
     val errorMessage: String? = null,
+    /** 当前队列来源：分组 id、心动歌单哨兵 id，或 -1（全部歌曲）。 */
+    val queueGroupId: Long = -1L,
 )

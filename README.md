@@ -3,7 +3,7 @@
 一个纯本地的 Android 音乐播放器：扫描设备上已有的音频文件，按歌曲/分组管理和播放，不联网、不上传、不修改任何音频文件。
 
 - 应用名：HappyHear
-- 包名：`com.local.musicplayer`
+- 包名：`com.alan.musicplayer`
 - 最低系统：Android 7.0（API 24），targetSdk 35
 
 ## 主要功能
@@ -38,7 +38,7 @@
 项目根目录/
 ├─ app/
 │  ├─ src/main/
-│  │  ├─ java/com/local/musicplayer/
+│  │  ├─ java/com/alan/musicplayer/
 │  │  │  ├─ MainActivity.kt / MusicApplication.kt
 │  │  │  ├─ data/
 │  │  │  │  ├─ db/          Room 数据库、分组实体与 DAO

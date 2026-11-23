@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.local.musicplayer"
+    namespace = "com.alan.musicplayer"
     compileSdk = 36
     // 本机 SDK（Unity 自带）仅安装了 36.0.0，显式指定避免 AGP 去下载默认的 35.0.0
     buildToolsVersion = "36.0.0"
 
     defaultConfig {
-        applicationId = "com.local.musicplayer"
+        applicationId = "com.alan.musicplayer"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

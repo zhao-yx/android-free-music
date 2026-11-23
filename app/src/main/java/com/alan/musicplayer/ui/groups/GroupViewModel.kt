@@ -20,9 +20,13 @@ data class GroupWithCount(
     val songCount: Int,
 )
 
+/** 「心动歌单」固定哨兵 id，仅用于导航，不写入分组数据表。 */
+const val HEART_PLAYLIST_ID = -2L
+
 data class GroupListUiState(
     val groups: List<GroupWithCount> = emptyList(),
     val allSongCount: Int = 0,
+    val heartSongCount: Int = 0,
 )
 
 class GroupListViewModel(application: Application) : AndroidViewModel(application) {
@@ -36,10 +40,13 @@ class GroupListViewModel(application: Application) : AndroidViewModel(applicatio
         repository.groups,
         repository.groupCounts,
         container.libraryRepository.songs,
-    ) { groups, counts, songs ->
+        container.heartPlaylistIds,
+    ) { groups, counts, songs, heartIds ->
+        val libraryIds = songs.mapTo(HashSet()) { it.id }
         GroupListUiState(
             groups = groups.map { GroupWithCount(it, counts[it.id] ?: 0) },
             allSongCount = songs.size,
+            heartSongCount = heartIds.count { it in libraryIds },
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GroupListUiState())
 
@@ -67,7 +74,12 @@ data class GroupDetailUiState(
     val allSongs: List<Song> = emptyList(),
     /** 「全部分组」为只读聚合视图，不参与分组数据表。 */
     val isAllSongs: Boolean = false,
-)
+    /** 「心动歌单」为系统自动维护的只读歌单。 */
+    val isHeartPlaylist: Boolean = false,
+) {
+    /** 固定条目（全部分组 / 心动歌单）均为只读。 */
+    val isReadOnly: Boolean get() = isAllSongs || isHeartPlaylist
+}
 
 class GroupDetailViewModel(
     application: Application,
@@ -78,6 +90,7 @@ class GroupDetailViewModel(
     private val repository = container.groupRepository
     private val groupId: Long = savedStateHandle.get<Long>("groupId") ?: -1L
     private val isAllSongs = groupId == PrefsRepository.ALL_SONGS_GROUP_ID
+    private val isHeartPlaylist = groupId == HEART_PLAYLIST_ID
 
     val playback: StateFlow<PlaybackUiState> = container.playerConnection.state
 
@@ -85,15 +98,26 @@ class GroupDetailViewModel(
         repository.observeGroup(groupId),
         repository.observeGroupSongs(groupId),
         container.libraryRepository.songs,
-    ) { group, members, allSongs ->
+        container.heartPlaylistIds,
+    ) { group, members, allSongs, heartIds ->
         // 分组内顺序由 position 决定；媒体库里已不存在的歌曲先由刷新逻辑清理再展示
         val byId = allSongs.associateBy { it.id }
+        val heartSongs = heartIds.mapNotNull { byId[it] }
         GroupDetailUiState(
-            groupName = if (isAllSongs) "全部分组" else group?.name ?: "分组",
-            groupExists = isAllSongs || group != null,
-            songs = if (isAllSongs) allSongs else members.mapNotNull { byId[it.songId] },
+            groupName = when {
+                isAllSongs -> "全部分组"
+                isHeartPlaylist -> "心动歌单"
+                else -> group?.name ?: "分组"
+            },
+            groupExists = isAllSongs || isHeartPlaylist || group != null,
+            songs = when {
+                isAllSongs -> allSongs
+                isHeartPlaylist -> heartSongs
+                else -> members.mapNotNull { byId[it.songId] }
+            },
             allSongs = allSongs,
             isAllSongs = isAllSongs,
+            isHeartPlaylist = isHeartPlaylist,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GroupDetailUiState())
 

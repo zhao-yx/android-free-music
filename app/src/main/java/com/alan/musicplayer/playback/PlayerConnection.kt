@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
+import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
@@ -33,6 +34,8 @@ class PlayerConnection(
     private val context: Context,
     private val prefs: PrefsRepository,
     private val scope: CoroutineScope,
+    /** 歌曲开始播放时回调，用于心动歌单的播放统计。 */
+    private val onSongStarted: (Long) -> Unit = {},
 ) {
 
     private val _state = MutableStateFlow(PlaybackUiState())
@@ -45,11 +48,20 @@ class PlayerConnection(
     private var isReady = false
     private var lastPersistedAt = 0L
 
+    /** 已计过数的歌曲，用于避免暂停恢复时重复计数；切歌/循环时清空。 */
+    private var lastCountedSongId: Long? = null
+
     private val listener = object : Player.Listener {
         // 所有播放器事件统一在这里同步成 UI 状态，避免多处状态分叉
         override fun onEvents(player: Player, events: Player.Events) {
             val previous = _state.value
             syncState(player)
+            // 歌曲真正开始播放即计一次；同一首暂停再继续不重复计
+            val playingId = player.currentMediaItem?.mediaId?.toLongOrNull()
+            if (player.isPlaying && playingId != null && playingId != lastCountedSongId) {
+                lastCountedSongId = playingId
+                onSongStarted(playingId)
+            }
             if (isReady) {
                 val songId = player.currentMediaItem?.mediaId?.toLongOrNull()
                 if (songId != null && previous.isPlaying && !player.isPlaying) {
@@ -57,6 +69,11 @@ class PlayerConnection(
                     persistPosition(songId, player.currentPosition, force = true)
                 }
             }
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            // 换歌或单曲循环重播都视为新的一次播放
+            lastCountedSongId = null
         }
 
         override fun onPlayerError(error: PlaybackException) {

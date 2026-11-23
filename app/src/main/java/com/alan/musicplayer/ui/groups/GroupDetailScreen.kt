@@ -115,10 +115,10 @@ fun GroupDetailScreen(
                 title = {
                     when {
                         selectionMode -> Text("已选择 ${validSelected.size} 项")
-                        uiState.isAllSongs -> Column {
-                            Text("全部分组")
+                        uiState.isReadOnly -> Column {
+                            Text(uiState.groupName)
                             Text(
-                                text = "全部歌曲",
+                                text = if (uiState.isHeartPlaylist) "自动维护" else "全部歌曲",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -150,8 +150,8 @@ fun GroupDetailScreen(
                             Text(if (allSelected) "取消全选" else "全选")
                         }
                         TextButton(onClick = { exitSelection() }) { Text("取消") }
-                    } else if (!uiState.isAllSongs) {
-                        // 「全部分组」为只读视图，不提供选择与添加
+                    } else if (!uiState.isReadOnly) {
+                        // 固定只读条目（全部分组 / 心动歌单）不提供选择与添加
                         TextButton(
                             onClick = { selectionMode = true },
                             enabled = songs.isNotEmpty(),
@@ -208,13 +208,20 @@ fun GroupDetailScreen(
                         modifier = Modifier.size(140.dp),
                     )
                     Spacer(Modifier.height(16.dp))
-                    Text(if (uiState.isAllSongs) "音乐库里还没有歌曲" else "分组里还没有歌曲", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = when {
+                            uiState.isHeartPlaylist -> "心动歌单还是空的"
+                            uiState.isAllSongs -> "音乐库里还没有歌曲"
+                            else -> "分组里还没有歌曲"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = if (uiState.isAllSongs) {
-                            "返回音乐库点击刷新，或确认系统媒体库已扫描到音频文件"
-                        } else {
-                            "点击右上角 + 从音乐库添加"
+                        text = when {
+                            uiState.isHeartPlaylist -> "多播放几首歌，下次启动后会按播放次数自动生成榜单"
+                            uiState.isAllSongs -> "返回音乐库点击刷新，或确认系统媒体库已扫描到音频文件"
+                            else -> "点击右上角 + 从音乐库添加"
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -263,7 +270,7 @@ fun GroupDetailScreen(
                                 song = song,
                                 isCurrent = playback.currentSong?.id == song.id,
                                 onClick = { viewModel.playSong(song) },
-                                trailing = if (uiState.isAllSongs) {
+                                trailing = if (uiState.isReadOnly) {
                                     null
                                 } else {
                                     {
